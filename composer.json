@@ -1,0 +1,21 @@
+{
+    "name": "semitexa/locale",
+    "description": "Internationalization (i18n) module for Semitexa Framework",
+    "version": "v1.0.0",
+    "type": "semitexa-module",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "semitexa/core": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Semitexa\\Locale\\": "src/"
+        }
+    },
+    "extra": {
+        "semitexa-module": {
+            "extends": null
+        }
+    }
+}
