@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Semitexa\Locale\Context;
 
 use Semitexa\Core\Locale\LocaleContextInterface;
-use Semitexa\Core\Locale\DefaultLocaleContext;
 
+/**
+ * Request-scoped locale context backed by LocaleContextStore.
+ *
+ * LocaleContextStore isolates the active locale per Swoole coroutine, so
+ * concurrent HTTP requests never share locale state regardless of how many
+ * times getInstance() is called within the same process.
+ */
 class LocaleManager implements LocaleContextInterface
 {
     private static ?self $instance = null;
-
-    private string $locale = 'en';
-    private string $fallbackLocale = 'en';
 
     private function __construct()
     {
@@ -25,22 +28,22 @@ class LocaleManager implements LocaleContextInterface
 
     public function getLocale(): string
     {
-        return $this->locale;
+        return LocaleContextStore::getLocale();
     }
 
     public function setLocale(string $locale): void
     {
-        $this->locale = $locale;
+        LocaleContextStore::setLocale($locale);
     }
 
     public function getFallbackLocale(): string
     {
-        return $this->fallbackLocale;
+        return LocaleContextStore::getFallbackLocale();
     }
 
     public function setFallbackLocale(string $locale): void
     {
-        $this->fallbackLocale = $locale;
+        LocaleContextStore::setFallbackLocale($locale);
     }
 
     public static function get(): ?self
