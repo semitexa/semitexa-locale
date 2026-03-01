@@ -40,7 +40,7 @@ final class LocaleBootstrapper
 
     private function buildResolver(): LocaleResolverInterface
     {
-        $strategy = getenv('LOCALE_STRATEGY') ?? 'path';
+        $strategy = getenv('LOCALE_STRATEGY') ?: 'path';
 
         return match ($strategy) {
             'path' => new PathLocaleResolver($this->getSupportedLocales()),
@@ -51,8 +51,8 @@ final class LocaleBootstrapper
 
     private function getSupportedLocales(): array
     {
-        $locales = getenv('LOCALE_SUPPORTED') ?? 'en,uk,de,pl,ru';
-        
-        return array_filter(array_map('trim', explode(',', $locales)));
+        $locales = getenv('LOCALE_SUPPORTED') ?: 'en,uk,de,pl,ru';
+
+        return array_filter(array_map('trim', explode(',', (string) $locales)));
     }
 }
