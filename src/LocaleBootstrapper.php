@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale;
 
+use Semitexa\Core\Environment;
 use Semitexa\Core\Request;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Locale\Context\LocaleManager;
@@ -20,7 +21,7 @@ final class LocaleBootstrapper
     public function __construct(?EventDispatcherInterface $events = null)
     {
         $this->events = $events;
-        $this->enabled = getenv('LOCALE_ENABLED') !== 'false';
+        $this->enabled = Environment::getEnvValue('LOCALE_ENABLED') !== 'false';
         $this->resolver = $this->buildResolver();
     }
 
@@ -40,7 +41,7 @@ final class LocaleBootstrapper
 
     private function buildResolver(): LocaleResolverInterface
     {
-        $strategy = getenv('LOCALE_STRATEGY') ?: 'path';
+        $strategy = Environment::getEnvValue('LOCALE_STRATEGY', 'path');
 
         return match ($strategy) {
             'path' => new PathLocaleResolver($this->getSupportedLocales()),
@@ -51,7 +52,7 @@ final class LocaleBootstrapper
 
     private function getSupportedLocales(): array
     {
-        $locales = getenv('LOCALE_SUPPORTED') ?: 'en,uk,de,pl,ru';
+        $locales = Environment::getEnvValue('LOCALE_SUPPORTED', 'en,uk,de,pl,ru');
 
         return array_filter(array_map('trim', explode(',', (string) $locales)));
     }
