@@ -11,16 +11,20 @@ use Semitexa\Core\Locale\LocaleContextInterface;
  *
  * LocaleContextStore isolates the active locale per Swoole coroutine, so
  * concurrent HTTP requests never share locale state regardless of how many
- * times getInstance() is called within the same process.
+ * times this class is instantiated within the same process.
  */
 class LocaleManager implements LocaleContextInterface
 {
+    /** @deprecated Use DI instead. Will be removed in next major version. */
     private static ?self $instance = null;
 
-    private function __construct()
+    public function __construct()
     {
     }
 
+    /**
+     * @deprecated Use DI to obtain LocaleContextInterface instead.
+     */
     public static function getInstance(): self
     {
         return self::$instance ??= new self();
