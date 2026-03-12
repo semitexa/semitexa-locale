@@ -11,7 +11,6 @@ use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Locale\Event\LocaleResolved;
 use Semitexa\Locale\Resolver\CookieLocaleResolver;
 use Semitexa\Locale\Resolver\LocaleResolverInterface;
-use Semitexa\Locale\Resolver\LocaleResolverChain;
 use Semitexa\Locale\Resolver\PathLocaleResolver;
 use Semitexa\Locale\Resolver\HeaderLocaleResolver;
 
@@ -44,6 +43,13 @@ final class LocaleBootstrapper
 
     public function resolve(Request $request, ?CookieJarInterface $cookieJar = null): void
     {
+        if (!$this->config->enabled) {
+            return;
+        }
+
+        $this->localeContext->setLocale($this->config->defaultLocale);
+        $this->localeContext->setFallbackLocale($this->config->fallbackLocale);
+
         $resolvedBy = null;
         $locale = null;
 

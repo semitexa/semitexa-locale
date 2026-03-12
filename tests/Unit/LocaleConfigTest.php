@@ -18,7 +18,7 @@ final class LocaleConfigTest extends TestCase
         $this->assertTrue($config->enabled);
         $this->assertSame('en', $config->defaultLocale);
         $this->assertSame('en', $config->fallbackLocale);
-        $this->assertSame(['en'], $config->supportedLocales);
+        $this->assertSame(['en', 'uk', 'de', 'pl', 'ru'], $config->supportedLocales);
         $this->assertSame(['path', 'header'], $config->resolverPriority);
     }
 
@@ -42,6 +42,13 @@ final class LocaleConfigTest extends TestCase
     #[Test]
     public function from_environment_uses_defaults_when_no_env(): void
     {
+        putenv('LOCALE_ENABLED');
+        putenv('LOCALE_DEFAULT');
+        putenv('LOCALE_FALLBACK');
+        putenv('LOCALE_STRATEGY');
+        putenv('LOCALE_SUPPORTED');
+        putenv('LOCALE_COOKIE_ENABLED');
+
         $config = LocaleConfig::fromEnvironment();
 
         $this->assertTrue($config->enabled);

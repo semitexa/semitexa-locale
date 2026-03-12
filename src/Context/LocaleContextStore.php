@@ -38,7 +38,7 @@ final class LocaleContextStore
     public static function getLocale(): string
     {
         if (self::inCoroutine()) {
-            return Coroutine::getContext()[self::LOCALE_KEY] ?? self::$staticFallbackLocale;
+            return Coroutine::getContext()[self::LOCALE_KEY] ?? self::$staticLocale;
         }
 
         return self::$staticLocale;

@@ -36,14 +36,19 @@ final class TranslationService
         $locale ??= $this->localeContext->getLocale();
         $fallback = $this->localeContext->getFallbackLocale();
 
-        $raw = $this->catalog->get($key, $locale)
-            ?? ($fallback !== $locale ? $this->catalog->get($key, $fallback) : null);
+        $resolvedLocale = $locale;
+        $raw = $this->catalog->get($key, $locale);
+
+        if ($raw === null && $fallback !== $locale) {
+            $raw = $this->catalog->get($key, $fallback);
+            $resolvedLocale = $fallback;
+        }
 
         if ($raw === null) {
             return $this->interpolate($key, $params + ['count' => (string) $count]);
         }
 
-        $message = $this->resolvePlural($raw, $locale, $count) ?? $key;
+        $message = $this->resolvePlural($raw, $resolvedLocale, $count) ?? $key;
 
         $message = str_replace(':count', (string) $count, $message);
         $message = str_replace('{{count}}', (string) $count, $message);
@@ -54,8 +59,10 @@ final class TranslationService
     public function hasTranslation(string $key, ?string $locale = null): bool
     {
         $locale ??= $this->localeContext->getLocale();
+        $fallback = $this->localeContext->getFallbackLocale();
 
-        return $this->catalog->has($key, $locale);
+        return $this->catalog->has($key, $locale)
+            || ($fallback !== $locale && $this->catalog->has($key, $fallback));
     }
 
     public function getLocale(): string

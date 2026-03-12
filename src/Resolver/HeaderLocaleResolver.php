@@ -25,8 +25,22 @@ final class HeaderLocaleResolver implements LocaleResolverInterface
         $entries = $this->parseAcceptLanguage($header);
 
         foreach ($entries as $locale) {
-            if ($this->supportedLocales === [] || in_array($locale, $this->supportedLocales, true)) {
+            if ($this->supportedLocales === []) {
                 return $locale;
+            }
+
+            if (in_array($locale, $this->supportedLocales, true)) {
+                return $locale;
+            }
+
+            // Fallback: try matching the primary language subtag (e.g. "en" from "en-US")
+            $separatorPosition = strpos($locale, '-');
+            if ($separatorPosition !== false) {
+                $primarySubtag = substr($locale, 0, $separatorPosition);
+
+                if (in_array($primarySubtag, $this->supportedLocales, true)) {
+                    return $primarySubtag;
+                }
             }
         }
 

@@ -19,7 +19,7 @@ final class PluralRules
      */
     public static function category(string $locale, int $count): string
     {
-        $language = explode('-', $locale)[0];
+        $language = strtolower(explode('-', str_replace('_', '-', $locale), 2)[0]);
 
         return match (self::family($language)) {
             'germanic' => self::germanic($count),

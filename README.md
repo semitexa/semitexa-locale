@@ -104,7 +104,7 @@ LocaleContextStore::clearFallback();
 
 Place JSON files in your module's locale directory:
 
-```
+```text
 src/modules/MyModule/Application/View/locales/
     en.json
     uk.json
@@ -214,15 +214,15 @@ When `semitexa/tenancy` is installed, this listener automatically sets the local
 ## Testing
 
 ```bash
-cd pakages/semitexa-locale
-../../vendor/bin/phpunit
+composer install
+vendor/bin/phpunit
 ```
 
 112 tests covering resolvers, context store, plural rules, translation catalog, loader, service, bootstrapper, and events.
 
 ## Package Structure
 
-```
+```text
 src/
 ├── LocaleBootstrapper.php          — Request lifecycle orchestrator
 ├── LocaleConfig.php                — Configuration DTO

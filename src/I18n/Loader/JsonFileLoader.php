@@ -49,8 +49,32 @@ final class JsonFileLoader
                     continue;
                 }
 
-                $catalog->addMessages($locale, $module, $messages);
+                $validated = [];
+                foreach ($messages as $key => $value) {
+                    if (is_string($value)) {
+                        $validated[$key] = $value;
+                    } elseif (is_array($value) && $this->isValidPluralMap($value)) {
+                        $validated[$key] = $value;
+                    }
+                }
+
+                if ($validated !== []) {
+                    $catalog->addMessages($locale, $module, $validated);
+                }
             }
         }
+    }
+
+    private function isValidPluralMap(array $value): bool
+    {
+        $allowedKeys = ['zero', 'one', 'two', 'few', 'many', 'other'];
+
+        foreach ($value as $k => $v) {
+            if (!is_string($v) || !in_array($k, $allowedKeys, true)) {
+                return false;
+            }
+        }
+
+        return $value !== [];
     }
 }
