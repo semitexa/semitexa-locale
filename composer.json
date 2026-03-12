@@ -6,12 +6,19 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "semitexa/core": "^1.0",
-        "semitexa/tenancy": "^1.0"
+        "semitexa/core": "^1.0"
+    },
+    "suggest": {
+        "semitexa/tenancy": "Required for TenantResolvedLocaleListener — sets locale from tenant context"
     },
     "autoload": {
         "psr-4": {
             "Semitexa\\Locale\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Semitexa\\Locale\\Tests\\": "tests/"
         }
     },
     "extra": {

@@ -22,8 +22,8 @@ final class LocaleContextStore
     private const LOCALE_KEY   = '__locale';
     private const FALLBACK_KEY = '__locale_fallback';
 
-    private static string $fallbackLocale         = 'en';
-    private static string $fallbackFallbackLocale = 'en';
+    private static string $staticLocale         = 'en';
+    private static string $staticFallbackLocale = 'en';
 
     public static function setLocale(string $locale): void
     {
@@ -32,16 +32,16 @@ final class LocaleContextStore
             return;
         }
 
-        self::$fallbackLocale = $locale;
+        self::$staticLocale = $locale;
     }
 
     public static function getLocale(): string
     {
         if (self::inCoroutine()) {
-            return Coroutine::getContext()[self::LOCALE_KEY] ?? self::$fallbackFallbackLocale;
+            return Coroutine::getContext()[self::LOCALE_KEY] ?? self::$staticFallbackLocale;
         }
 
-        return self::$fallbackLocale;
+        return self::$staticLocale;
     }
 
     public static function setFallbackLocale(string $locale): void
@@ -51,16 +51,16 @@ final class LocaleContextStore
             return;
         }
 
-        self::$fallbackFallbackLocale = $locale;
+        self::$staticFallbackLocale = $locale;
     }
 
     public static function getFallbackLocale(): string
     {
         if (self::inCoroutine()) {
-            return Coroutine::getContext()[self::FALLBACK_KEY] ?? self::$fallbackFallbackLocale;
+            return Coroutine::getContext()[self::FALLBACK_KEY] ?? self::$staticFallbackLocale;
         }
 
-        return self::$fallbackFallbackLocale;
+        return self::$staticFallbackLocale;
     }
 
     /**
@@ -68,8 +68,8 @@ final class LocaleContextStore
      */
     public static function clearFallback(): void
     {
-        self::$fallbackLocale         = 'en';
-        self::$fallbackFallbackLocale = 'en';
+        self::$staticLocale         = 'en';
+        self::$staticFallbackLocale = 'en';
     }
 
     private static function inCoroutine(): bool
