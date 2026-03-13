@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semitexa\Locale\Resolver;
 
 use Semitexa\Core\Request;
+use Semitexa\Locale\LocaleResolution;
 
 final class PathLocaleResolver implements LocaleResolverInterface
 {
@@ -15,8 +16,13 @@ final class PathLocaleResolver implements LocaleResolverInterface
 
     public function resolve(Request $request): ?string
     {
+        return $this->detect($request)?->locale;
+    }
+
+    public function detect(Request $request): ?LocaleResolution
+    {
         $path = ltrim($request->getPath(), '/');
-        
+
         if ($path === '') {
             return null;
         }
@@ -28,6 +34,13 @@ final class PathLocaleResolver implements LocaleResolverInterface
             return null;
         }
 
-        return $firstSegment;
+        $stripped = '/' . ($segments[1] ?? '');
+
+        return new LocaleResolution(
+            locale: $firstSegment,
+            resolvedBy: 'path',
+            hadPathPrefix: true,
+            strippedPath: $stripped,
+        );
     }
 }

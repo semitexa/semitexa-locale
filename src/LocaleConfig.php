@@ -21,6 +21,8 @@ readonly class LocaleConfig
         public string $fallbackLocale = 'en',
         public array $supportedLocales = self::DEFAULT_SUPPORTED_LOCALES,
         public array $resolverPriority = self::DEFAULT_RESOLVER_PRIORITY,
+        public bool $urlPrefixEnabled = false,
+        public bool $urlRedirectDefault = true,
     ) {}
 
     public static function fromEnvironment(): self
@@ -46,12 +48,23 @@ readonly class LocaleConfig
                 : self::DEFAULT_RESOLVER_PRIORITY,
         };
 
+        $urlPrefixEnabled = Environment::getEnvValue('LOCALE_URL_PREFIX') === 'true';
+        $urlRedirectDefault = Environment::getEnvValue('LOCALE_REDIRECT_DEFAULT') !== 'false';
+
+        if ($urlPrefixEnabled) {
+            $resolverPriority = array_values(array_unique(
+                array_merge(['path'], $resolverPriority)
+            ));
+        }
+
         return new self(
             enabled: $enabled,
             defaultLocale: $defaultLocale,
             fallbackLocale: $fallbackLocale,
             supportedLocales: $supportedLocales,
             resolverPriority: $resolverPriority,
+            urlPrefixEnabled: $urlPrefixEnabled,
+            urlRedirectDefault: $urlRedirectDefault,
         );
     }
 }

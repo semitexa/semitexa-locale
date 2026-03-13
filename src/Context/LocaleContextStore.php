@@ -19,11 +19,15 @@ use Swoole\Coroutine;
  */
 final class LocaleContextStore
 {
-    private const LOCALE_KEY   = '__locale';
-    private const FALLBACK_KEY = '__locale_fallback';
+    private const LOCALE_KEY         = '__locale';
+    private const FALLBACK_KEY       = '__locale_fallback';
+    private const URL_PREFIX_KEY     = '__locale_url_prefix';
+    private const DEFAULT_LOCALE_KEY = '__locale_default';
 
     private static string $staticLocale         = 'en';
     private static string $staticFallbackLocale = 'en';
+    private static bool $staticUrlPrefix        = false;
+    private static string $staticDefaultLocale  = 'en';
 
     public static function setLocale(string $locale): void
     {
@@ -63,6 +67,44 @@ final class LocaleContextStore
         return self::$staticFallbackLocale;
     }
 
+    public static function setUrlPrefixEnabled(bool $enabled): void
+    {
+        if (self::inCoroutine()) {
+            Coroutine::getContext()[self::URL_PREFIX_KEY] = $enabled;
+            return;
+        }
+
+        self::$staticUrlPrefix = $enabled;
+    }
+
+    public static function isUrlPrefixEnabled(): bool
+    {
+        if (self::inCoroutine()) {
+            return Coroutine::getContext()[self::URL_PREFIX_KEY] ?? self::$staticUrlPrefix;
+        }
+
+        return self::$staticUrlPrefix;
+    }
+
+    public static function setDefaultLocale(string $locale): void
+    {
+        if (self::inCoroutine()) {
+            Coroutine::getContext()[self::DEFAULT_LOCALE_KEY] = $locale;
+            return;
+        }
+
+        self::$staticDefaultLocale = $locale;
+    }
+
+    public static function getDefaultLocale(): string
+    {
+        if (self::inCoroutine()) {
+            return Coroutine::getContext()[self::DEFAULT_LOCALE_KEY] ?? self::$staticDefaultLocale;
+        }
+
+        return self::$staticDefaultLocale;
+    }
+
     /**
      * Reset static fallback state (useful in CLI/test teardown).
      */
@@ -70,6 +112,8 @@ final class LocaleContextStore
     {
         self::$staticLocale         = 'en';
         self::$staticFallbackLocale = 'en';
+        self::$staticUrlPrefix      = false;
+        self::$staticDefaultLocale  = 'en';
     }
 
     private static function inCoroutine(): bool
