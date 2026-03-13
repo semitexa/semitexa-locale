@@ -41,17 +41,16 @@ final class LocaleBootstrapper
         return $this->localeContext;
     }
 
-    public function resolve(Request $request, ?CookieJarInterface $cookieJar = null): void
+    public function resolve(Request $request, ?CookieJarInterface $cookieJar = null): ?LocaleResolution
     {
         if (!$this->config->enabled) {
-            return;
+            return null;
         }
 
         $this->localeContext->setLocale($this->config->defaultLocale);
         $this->localeContext->setFallbackLocale($this->config->fallbackLocale);
 
-        $resolvedBy = null;
-        $locale = null;
+        $resolution = null;
 
         foreach ($this->config->resolverPriority as $key) {
             $resolver = $this->createResolver($key, $cookieJar);
@@ -60,22 +59,47 @@ final class LocaleBootstrapper
                 continue;
             }
 
+            if ($key === 'path'
+                && $this->config->urlPrefixEnabled
+                && $resolver instanceof PathLocaleResolver
+            ) {
+                $detection = $resolver->detect($request);
+                if ($detection !== null) {
+                    $resolution = $detection;
+                    break;
+                }
+                // No prefix in URL → default locale is authoritative; skip cookie/header
+                $resolution = new LocaleResolution(
+                    locale: $this->config->defaultLocale,
+                    resolvedBy: 'path',
+                    hadPathPrefix: false,
+                    strippedPath: null,
+                );
+                break;
+            }
+
             $result = $resolver->resolve($request);
 
             if ($result !== null) {
-                $locale = $result;
-                $resolvedBy = $key;
+                $resolution = new LocaleResolution(
+                    locale: $result,
+                    resolvedBy: $key,
+                    hadPathPrefix: false,
+                    strippedPath: null,
+                );
                 break;
             }
         }
 
-        if ($locale !== null) {
-            $this->localeContext->setLocale($locale);
+        if ($resolution !== null) {
+            $this->localeContext->setLocale($resolution->locale);
 
             if ($this->events !== null) {
-                $this->events->dispatch(new LocaleResolved($locale, $resolvedBy));
+                $this->events->dispatch(new LocaleResolved($resolution->locale, $resolution->resolvedBy));
             }
         }
+
+        return $resolution;
     }
 
     private function createResolver(string $key, ?CookieJarInterface $cookieJar = null): ?LocaleResolverInterface
