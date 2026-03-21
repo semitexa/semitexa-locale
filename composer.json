@@ -1,7 +1,7 @@
 {
     "name": "semitexa/locale",
     "description": "Internationalization (i18n) module for Semitexa Framework",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "type": "semitexa-module",
     "license": "MIT",
     "require": {
