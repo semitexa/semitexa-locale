@@ -9,7 +9,7 @@
         "semitexa/core": "^1.0"
     },
     "suggest": {
-        "semitexa/tenancy": "Required for TenantResolvedLocaleListener — sets locale from tenant context"
+        "semitexa/tenancy": "Required for TenantResolvedLocaleListener \u2014 sets locale from tenant context"
     },
     "autoload": {
         "psr-4": {
@@ -25,5 +25,9 @@
         "semitexa-module": {
             "extends": null
         }
-    }
+    },
+    "keywords": [
+        "semitexa",
+        "locale"
+    ]
 }
