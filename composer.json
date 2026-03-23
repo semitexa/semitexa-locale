@@ -1,6 +1,6 @@
 {
     "name": "semitexa/locale",
-    "description": "Internationalization (i18n) module for Semitexa Framework",
+    "description": "Semitexa Locale - translation, locale resolution, and i18n support for applications",
     "version": "1.0.9",
     "type": "semitexa-module",
     "license": "MIT",
@@ -28,6 +28,9 @@
     },
     "keywords": [
         "semitexa",
-        "locale"
+        "locale",
+        "i18n",
+        "translations",
+        "localization"
     ]
 }
