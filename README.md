@@ -4,7 +4,7 @@ Internationalization module with per-request locale resolution, coroutine-safe c
 
 ## Purpose
 
-Resolves the active locale on every request through a composable chain of strategies (cookie, URL path, Accept-Language header). Stores the result in coroutine-safe context and provides a translation service with full CLDR plural rules for Germanic, Slavic, and other language families.
+Resolves the active locale on every request through a composable chain of strategies (cookie, URL path, Accept-Language header). Stores the result in coroutine-safe context and provides a translation service with CLDR plural rules for Germanic and Slavic languages, with other languages currently falling back to Germanic rules.
 
 ## Role in Semitexa
 
