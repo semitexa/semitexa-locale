@@ -4,7 +4,7 @@ Internationalization module with per-request locale resolution, coroutine-safe c
 
 ## Purpose
 
-Resolves the active locale on every request through a composable chain of strategies (cookie, URL path, Accept-Language header). Stores the result in coroutine-safe context and provides a translation service with CLDR plural rules for Germanic and Slavic languages, with other languages currently falling back to Germanic rules.
+Resolves the active locale on every request through a composable, configurable resolver chain (commonly cookie, URL path, and Accept-Language header; actual order follows configuration). Stores the result in coroutine-safe context and provides a translation service with CLDR plural rules for Germanic and Slavic languages, with other languages currently falling back to Germanic rules.
 
 ## Role in Semitexa
 
@@ -12,7 +12,7 @@ Depends on Core. Optional integration with Tenancy for tenant-driven locale defa
 
 ## Key Features
 
-- Resolver chain: `CookieLocaleResolver`, `PathLocaleResolver`, `HeaderLocaleResolver` (RFC 7231 quality factors)
+- Resolver chain (configuration-driven priority): `CookieLocaleResolver`, `PathLocaleResolver`, `HeaderLocaleResolver` (RFC 7231 quality factors)
 - Custom resolvers via `LocaleResolverInterface`
 - Coroutine-safe `LocaleContextStore` for Swoole
 - `TranslationService` with named placeholders and `transChoice()` for plurals
