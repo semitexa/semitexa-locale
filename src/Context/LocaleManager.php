@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Context;
 
+use Semitexa\Core\Attributes\SatisfiesServiceContract;
 use Semitexa\Core\Locale\LocaleContextInterface;
 
 /**
@@ -13,6 +14,7 @@ use Semitexa\Core\Locale\LocaleContextInterface;
  * concurrent HTTP requests never share locale state regardless of how many
  * times this class is instantiated within the same process.
  */
+#[SatisfiesServiceContract(of: LocaleContextInterface::class)]
 class LocaleManager implements LocaleContextInterface
 {
     /** @deprecated Use DI instead. Will be removed in next major version. */

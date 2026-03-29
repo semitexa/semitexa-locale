@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semitexa\Locale\Event;
 
 use Semitexa\Core\Attributes\AsEventListener;
+use Semitexa\Core\Attributes\InjectAsReadonly;
 use Semitexa\Core\Event\EventExecution;
 use Semitexa\Core\Locale\LocaleContextInterface;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
@@ -18,9 +19,8 @@ use Semitexa\Tenancy\Event\TenantResolved;
 #[AsEventListener(event: TenantResolved::class, execution: EventExecution::Sync)]
 final class TenantResolvedLocaleListener
 {
-    public function __construct(
-        private readonly LocaleContextInterface $localeContext,
-    ) {}
+    #[InjectAsReadonly]
+    protected LocaleContextInterface $localeContext;
 
     public function handle(TenantResolved $event): void
     {
