@@ -6,8 +6,8 @@ namespace Semitexa\Locale\Event;
 
 use Semitexa\Core\Attributes\AsEventListener;
 use Semitexa\Core\Event\EventExecution;
+use Semitexa\Core\Locale\LocaleContextInterface;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
-use Semitexa\Locale\Context\LocaleManager;
 use Semitexa\Tenancy\Event\TenantResolved;
 
 /**
@@ -18,6 +18,10 @@ use Semitexa\Tenancy\Event\TenantResolved;
 #[AsEventListener(event: TenantResolved::class, execution: EventExecution::Sync)]
 final class TenantResolvedLocaleListener
 {
+    public function __construct(
+        private readonly LocaleContextInterface $localeContext,
+    ) {}
+
     public function handle(TenantResolved $event): void
     {
         $locale = $event->context->getLayer(new LocaleLayer());
@@ -25,6 +29,6 @@ final class TenantResolvedLocaleListener
             return;
         }
 
-        LocaleManager::getInstance()->setLocale($locale->rawValue());
+        $this->localeContext->setLocale($locale->rawValue());
     }
 }
