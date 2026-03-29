@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semitexa\Locale\Event;
 
 use Semitexa\Core\Attributes\AsEventListener;
+use Semitexa\Core\Event\EventExecution;
 use Semitexa\Core\Locale\LocaleContextInterface;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
 use Semitexa\Tenancy\Event\TenantResolved;
@@ -14,7 +15,7 @@ use Semitexa\Tenancy\Event\TenantResolved;
  * when the Locale layer is present. Allows locale to be driven by tenancy (e.g. path/domain)
  * without semitexa-locale depending on resolution logic.
  */
-#[AsEventListener(event: TenantResolved::class)]
+#[AsEventListener(event: TenantResolved::class, execution: EventExecution::Sync)]
 final class TenantResolvedLocaleListener
 {
     public function __construct(
