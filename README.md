@@ -1,4 +1,4 @@
-# semitexa/locale
+# Semitexa Locale
 
 Internationalization module with per-request locale resolution, coroutine-safe context, and translation with CLDR plural support.
 
