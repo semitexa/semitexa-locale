@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Context;
 
-use Semitexa\Core\Attributes\SatisfiesServiceContract;
+use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Locale\LocaleContextInterface;
 
 /**
