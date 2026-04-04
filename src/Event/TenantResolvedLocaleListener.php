@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Event;
 
-use Semitexa\Core\Attributes\AsEventListener;
-use Semitexa\Core\Attributes\InjectAsReadonly;
+use Semitexa\Core\Attribute\AsEventListener;
+use Semitexa\Core\Attribute\InjectAsReadonly;
 use Semitexa\Core\Event\EventExecution;
 use Semitexa\Core\Locale\LocaleContextInterface;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
