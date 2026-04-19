@@ -204,6 +204,7 @@ final class LocaleBootstrapperTest extends TestCase
             public function __construct(private array &$dispatched) {}
             public function create(string $eventClass, array $payload): object { return new $eventClass(...$payload); }
             public function dispatch(object $event): void { $this->dispatched[] = $event; }
+            public function addPostDispatchHook(callable $hook): void {}
         };
     }
 }
