@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Locale\Context\LocaleContextStore;
 use Semitexa\Locale\Context\LocaleManager;
-use Semitexa\Locale\I18n\TranslationCatalog;
-use Semitexa\Locale\I18n\TranslationService;
+use Semitexa\Locale\Application\Service\I18n\TranslationCatalog;
+use Semitexa\Locale\Application\Service\I18n\TranslationService;
 
 final class TranslationServiceTest extends TestCase
 {

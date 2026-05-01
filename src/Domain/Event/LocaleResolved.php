@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale\Event;
+namespace Semitexa\Locale\Domain\Event;
 
 /**
  * Dispatched after the locale has been resolved for the current request.

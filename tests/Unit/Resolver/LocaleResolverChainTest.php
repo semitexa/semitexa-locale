@@ -7,8 +7,8 @@ namespace Semitexa\Locale\Tests\Unit\Resolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
-use Semitexa\Locale\Resolver\LocaleResolverChain;
-use Semitexa\Locale\Resolver\LocaleResolverInterface;
+use Semitexa\Locale\Application\Service\Resolver\LocaleResolverChain;
+use Semitexa\Locale\Domain\Contract\LocaleResolverInterface;
 
 final class LocaleResolverChainTest extends TestCase
 {

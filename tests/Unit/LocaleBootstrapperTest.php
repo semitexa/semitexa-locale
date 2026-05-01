@@ -11,9 +11,9 @@ use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\Request;
 use Semitexa\Locale\Context\LocaleContextStore;
 use Semitexa\Locale\Context\LocaleManager;
-use Semitexa\Locale\Event\LocaleResolved;
-use Semitexa\Locale\LocaleBootstrapper;
-use Semitexa\Locale\LocaleConfig;
+use Semitexa\Locale\Domain\Event\LocaleResolved;
+use Semitexa\Locale\Application\Service\LocaleBootstrapper;
+use Semitexa\Locale\Configuration\LocaleConfig;
 
 final class LocaleBootstrapperTest extends TestCase
 {

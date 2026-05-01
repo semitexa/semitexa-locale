@@ -6,7 +6,7 @@ namespace Semitexa\Locale\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Locale\LocaleConfig;
+use Semitexa\Locale\Configuration\LocaleConfig;
 
 final class LocaleConfigTest extends TestCase
 {

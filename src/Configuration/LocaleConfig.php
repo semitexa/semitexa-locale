@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale;
+namespace Semitexa\Locale\Configuration;
 
 use Semitexa\Core\Environment;
 

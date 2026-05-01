@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale\Event;
+namespace Semitexa\Locale\Application\Handler\DomainListener;
 
 use Semitexa\Core\Attribute\AsEventListener;
 use Semitexa\Core\Attribute\InjectAsReadonly;
 use Semitexa\Core\Event\EventExecution;
 use Semitexa\Core\Locale\LocaleContextInterface;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
-use Semitexa\Tenancy\Event\TenantResolved;
+use Semitexa\Tenancy\Domain\Event\TenantResolved;
 
 /**
  * Listens to TenantResolved and sets the request locale from the tenant context

@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Cookie\CookieJarInterface;
 use Semitexa\Core\Request;
-use Semitexa\Locale\Resolver\CookieLocaleResolver;
+use Semitexa\Locale\Application\Service\Resolver\CookieLocaleResolver;
 
 final class CookieLocaleResolverTest extends TestCase
 {

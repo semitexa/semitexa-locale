@@ -6,7 +6,7 @@ namespace Semitexa\Locale\Tests\Unit\Event;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Locale\Event\LocaleResolved;
+use Semitexa\Locale\Domain\Event\LocaleResolved;
 
 final class LocaleResolvedTest extends TestCase
 {

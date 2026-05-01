@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale\Resolver;
+namespace Semitexa\Locale\Domain\Contract;
 
 use Semitexa\Core\Request;
 
