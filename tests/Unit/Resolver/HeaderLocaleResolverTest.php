@@ -7,7 +7,7 @@ namespace Semitexa\Locale\Tests\Unit\Resolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
-use Semitexa\Locale\Resolver\HeaderLocaleResolver;
+use Semitexa\Locale\Application\Service\Resolver\HeaderLocaleResolver;
 
 final class HeaderLocaleResolverTest extends TestCase
 {

@@ -6,8 +6,8 @@ namespace Semitexa\Locale\Tests\Unit\I18n\Loader;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Locale\I18n\Loader\JsonFileLoader;
-use Semitexa\Locale\I18n\TranslationCatalog;
+use Semitexa\Locale\Application\Service\I18n\JsonFileLoader;
+use Semitexa\Locale\Application\Service\I18n\TranslationCatalog;
 
 final class JsonFileLoaderTest extends TestCase
 {

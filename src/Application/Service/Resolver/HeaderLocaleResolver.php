@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale\Resolver;
+namespace Semitexa\Locale\Application\Service\Resolver;
+
+use Semitexa\Locale\Domain\Contract\LocaleResolverInterface;
 
 use Semitexa\Core\Request;
 

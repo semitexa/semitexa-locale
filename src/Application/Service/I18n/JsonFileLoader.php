@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale\I18n\Loader;
+namespace Semitexa\Locale\Application\Service\I18n;
 
-use Semitexa\Locale\I18n\TranslationCatalog;
+use Semitexa\Locale\Application\Service\I18n\TranslationCatalog;
 
 /**
  * Discovers and loads JSON locale files from module directories.

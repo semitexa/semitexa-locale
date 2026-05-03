@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale\I18n;
+namespace Semitexa\Locale\Application\Service\I18n;
 
 /**
  * CLDR-based plural category resolution.

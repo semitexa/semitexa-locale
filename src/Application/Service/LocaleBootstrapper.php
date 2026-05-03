@@ -2,17 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Locale;
+namespace Semitexa\Locale\Application\Service;
+
+use Semitexa\Locale\Configuration\LocaleConfig;
+
+use Semitexa\Locale\Domain\Model\LocaleResolution;
 
 use Semitexa\Core\Cookie\CookieJarInterface;
 use Semitexa\Core\Locale\LocaleContextInterface;
 use Semitexa\Core\Request;
 use Semitexa\Core\Event\EventDispatcherInterface;
-use Semitexa\Locale\Event\LocaleResolved;
-use Semitexa\Locale\Resolver\CookieLocaleResolver;
-use Semitexa\Locale\Resolver\LocaleResolverInterface;
-use Semitexa\Locale\Resolver\PathLocaleResolver;
-use Semitexa\Locale\Resolver\HeaderLocaleResolver;
+use Semitexa\Locale\Domain\Event\LocaleResolved;
+use Semitexa\Locale\Application\Service\Resolver\CookieLocaleResolver;
+use Semitexa\Locale\Domain\Contract\LocaleResolverInterface;
+use Semitexa\Locale\Application\Service\Resolver\PathLocaleResolver;
+use Semitexa\Locale\Application\Service\Resolver\HeaderLocaleResolver;
 
 final class LocaleBootstrapper
 {

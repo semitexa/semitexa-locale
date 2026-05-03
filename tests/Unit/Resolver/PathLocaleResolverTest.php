@@ -7,7 +7,7 @@ namespace Semitexa\Locale\Tests\Unit\Resolver;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
-use Semitexa\Locale\Resolver\PathLocaleResolver;
+use Semitexa\Locale\Application\Service\Resolver\PathLocaleResolver;
 
 final class PathLocaleResolverTest extends TestCase
 {

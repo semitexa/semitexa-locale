@@ -7,7 +7,7 @@ namespace Semitexa\Locale\Tests\Unit\I18n;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Locale\I18n\PluralRules;
+use Semitexa\Locale\Application\Service\I18n\PluralRules;
 
 final class PluralRulesTest extends TestCase
 {
