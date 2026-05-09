@@ -69,6 +69,29 @@ final class JsonFileLoaderTest extends TestCase
         $this->assertEmpty($catalog->getLocales());
     }
 
+    #[Test]
+    public function loads_locales_from_canonical_module_src_layout(): void
+    {
+        $modulesRoot = sys_get_temp_dir() . '/semitexa_locale_src_test_' . uniqid();
+        $moduleLocales = $modulesRoot . '/Hello/src/Application/View/locales';
+        mkdir($moduleLocales, 0777, true);
+
+        file_put_contents($moduleLocales . '/en.json', json_encode([
+            'hello.headline' => 'Build the part that matters.',
+        ]));
+
+        try {
+            $catalog = new TranslationCatalog();
+            $loader = new JsonFileLoader($modulesRoot);
+            $loader->load($catalog);
+
+            $this->assertSame('Build the part that matters.', $catalog->get('hello.headline', 'en'));
+            $this->assertSame('Build the part that matters.', $catalog->get('Hello.hello.headline', 'en'));
+        } finally {
+            $this->removeDir($modulesRoot);
+        }
+    }
+
     private function removeDir(string $dir): void
     {
         if (!is_dir($dir)) {

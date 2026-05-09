@@ -9,7 +9,9 @@ use Semitexa\Locale\Application\Service\I18n\TranslationCatalog;
 /**
  * Discovers and loads JSON locale files from module directories.
  *
- * Expected structure: {modulesRoot}/{Module}/Application/View/locales/{locale}.json
+ * Two module layouts are supported, mirroring ModuleRegistry::registerModule:
+ *   {modulesRoot}/{Module}/src/Application/View/locales/{locale}.json  (canonical)
+ *   {modulesRoot}/{Module}/Application/View/locales/{locale}.json      (legacy)
  *
  * JSON files may contain flat key-value strings or nested objects for plural forms:
  *   { "key": "value", "items": { "one": "1 item", "few": "{{count}} items", "many": "..." } }
@@ -27,9 +29,9 @@ final class JsonFileLoader
         }
 
         foreach (glob($this->modulesRoot . '/*', GLOB_ONLYDIR) ?: [] as $moduleDir) {
-            $localesDir = $moduleDir . '/Application/View/locales';
+            $localesDir = $this->resolveLocalesDir($moduleDir);
 
-            if (!is_dir($localesDir)) {
+            if ($localesDir === null) {
                 continue;
             }
 
@@ -63,6 +65,18 @@ final class JsonFileLoader
                 }
             }
         }
+    }
+
+    private function resolveLocalesDir(string $moduleDir): ?string
+    {
+        foreach (['/src/Application/View/locales', '/Application/View/locales'] as $candidate) {
+            $path = $moduleDir . $candidate;
+            if (is_dir($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     private function isValidPluralMap(array $value): bool
