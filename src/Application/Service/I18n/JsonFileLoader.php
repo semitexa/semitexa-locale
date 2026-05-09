@@ -9,7 +9,8 @@ use Semitexa\Locale\Application\Service\I18n\TranslationCatalog;
 /**
  * Discovers and loads JSON locale files from module directories.
  *
- * Two module layouts are supported, mirroring ModuleRegistry::registerModule:
+ * Two module layouts are supported, mirroring \Semitexa\Core\ModuleRegistry's
+ * template-path resolution (canonical first, legacy fallback):
  *   {modulesRoot}/{Module}/src/Application/View/locales/{locale}.json  (canonical)
  *   {modulesRoot}/{Module}/Application/View/locales/{locale}.json      (legacy)
  *
