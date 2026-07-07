@@ -19,12 +19,26 @@ use Semitexa\Locale\Application\Service\I18n\TranslationCatalog;
  */
 final class JsonFileLoader
 {
+    /**
+     * @param array<string, string> $extraLocaleDirs moduleName => absolute locales dir
+     *        (installed PACKAGES — the modulesRoot scan only covers src/modules/*)
+     */
     public function __construct(
         private readonly string $modulesRoot,
+        private readonly array $extraLocaleDirs = [],
     ) {}
 
     public function load(TranslationCatalog $catalog): void
     {
+        // Installed packages first — an app module (scanned below) may then
+        // override a package's key for the same locale (addMessages keeps the
+        // first value only for the unprefixed alias; prefixed keys are per-module).
+        foreach ($this->extraLocaleDirs as $module => $localesDir) {
+            if (is_string($module) && $module !== '' && is_dir($localesDir)) {
+                $this->loadDir($catalog, $module, $localesDir);
+            }
+        }
+
         if (!is_dir($this->modulesRoot)) {
             return;
         }
@@ -38,32 +52,38 @@ final class JsonFileLoader
 
             $module = basename($moduleDir);
 
-            foreach (glob($localesDir . '/*.json') ?: [] as $file) {
-                $locale = basename($file, '.json');
-                $content = file_get_contents($file);
+            $this->loadDir($catalog, $module, $localesDir);
+        }
+    }
 
-                if ($content === false) {
-                    continue;
+    /** Load every {locale}.json in one module's locales dir into the catalog. */
+    private function loadDir(TranslationCatalog $catalog, string $module, string $localesDir): void
+    {
+        foreach (glob($localesDir . '/*.json') ?: [] as $file) {
+            $locale = basename($file, '.json');
+            $content = file_get_contents($file);
+
+            if ($content === false) {
+                continue;
+            }
+
+            $messages = json_decode($content, true);
+
+            if (!is_array($messages)) {
+                continue;
+            }
+
+            $validated = [];
+            foreach ($messages as $key => $value) {
+                if (is_string($value)) {
+                    $validated[$key] = $value;
+                } elseif (is_array($value) && $this->isValidPluralMap($value)) {
+                    $validated[$key] = $value;
                 }
+            }
 
-                $messages = json_decode($content, true);
-
-                if (!is_array($messages)) {
-                    continue;
-                }
-
-                $validated = [];
-                foreach ($messages as $key => $value) {
-                    if (is_string($value)) {
-                        $validated[$key] = $value;
-                    } elseif (is_array($value) && $this->isValidPluralMap($value)) {
-                        $validated[$key] = $value;
-                    }
-                }
-
-                if ($validated !== []) {
-                    $catalog->addMessages($locale, $module, $validated);
-                }
+            if ($validated !== []) {
+                $catalog->addMessages($locale, $module, $validated);
             }
         }
     }

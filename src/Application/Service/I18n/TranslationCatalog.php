@@ -54,6 +54,26 @@ final class TranslationCatalog
     }
 
     /**
+     * All message keys for a locale, optionally filtered by prefix — the
+     * enumeration seam for building client-side string bundles (e.g. the OS
+     * shell resolves every `os.shell.*` key for the boot payload).
+     *
+     * @return list<string>
+     */
+    public function keys(string $locale, string $prefix = ''): array
+    {
+        $keys = array_keys($this->messages[$locale] ?? []);
+        if ($prefix === '') {
+            return array_values($keys);
+        }
+
+        return array_values(array_filter(
+            $keys,
+            static fn (string $key): bool => str_starts_with($key, $prefix),
+        ));
+    }
+
+    /**
      * @return string[] All loaded locale codes.
      */
     public function getLocales(): array

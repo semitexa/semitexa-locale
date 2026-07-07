@@ -5,7 +5,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "semitexa/core": "*"
+        "semitexa/core": "*",
+        "semitexa/orm": "*"
     },
     "suggest": {
         "semitexa/tenancy": "Required for TenantResolvedLocaleListener \u2014 sets locale from tenant context"

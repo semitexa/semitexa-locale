@@ -5,20 +5,40 @@ declare(strict_types=1);
 namespace Semitexa\Locale\Application\Service\I18n;
 
 use Semitexa\Core\Locale\LocaleContextInterface;
+use Semitexa\Locale\Domain\Contract\TranslationOverrideProviderInterface;
 
 final class TranslationService
 {
     public function __construct(
         private readonly TranslationCatalog $catalog,
         private readonly LocaleContextInterface $localeContext,
+        /**
+         * Per-tenant override provider, checked BEFORE the global catalog.
+         * Null (CLI / tests / no DB) = pure global catalog, today's behaviour.
+         */
+        private readonly ?TranslationOverrideProviderInterface $overrides = null,
     ) {}
+
+    /**
+     * A tenant override for ONE locale, or null. Per-locale (not locale|fallback
+     * combined) so each call site can interleave overrides with the catalog at
+     * the correct precedence: override(locale) → catalog(locale) →
+     * override(fallback) → catalog(fallback). Best-effort — the global catalog
+     * is always the safety net.
+     */
+    private function overrideOne(string $key, string $locale): ?string
+    {
+        return $this->overrides?->override($key, $locale);
+    }
 
     public function trans(string $key, array $params = [], ?string $locale = null): string
     {
         $locale ??= $this->localeContext->getLocale();
         $fallback = $this->localeContext->getFallbackLocale();
 
-        $message = $this->catalog->get($key, $locale)
+        $message = $this->overrideOne($key, $locale)
+            ?? $this->catalog->get($key, $locale)
+            ?? ($fallback !== $locale ? $this->overrideOne($key, $fallback) : null)
             ?? ($fallback !== $locale ? $this->catalog->get($key, $fallback) : null)
             ?? $key;
 
@@ -37,10 +57,10 @@ final class TranslationService
         $fallback = $this->localeContext->getFallbackLocale();
 
         $resolvedLocale = $locale;
-        $raw = $this->catalog->get($key, $locale);
+        $raw = $this->overrideOne($key, $locale) ?? $this->catalog->get($key, $locale);
 
         if ($raw === null && $fallback !== $locale) {
-            $raw = $this->catalog->get($key, $fallback);
+            $raw = $this->overrideOne($key, $fallback) ?? $this->catalog->get($key, $fallback);
             $resolvedLocale = $fallback;
         }
 
@@ -61,8 +81,12 @@ final class TranslationService
         $locale ??= $this->localeContext->getLocale();
         $fallback = $this->localeContext->getFallbackLocale();
 
-        return $this->catalog->has($key, $locale)
-            || ($fallback !== $locale && $this->catalog->has($key, $fallback));
+        return $this->overrideOne($key, $locale) !== null
+            || $this->catalog->has($key, $locale)
+            || ($fallback !== $locale && (
+                $this->overrideOne($key, $fallback) !== null
+                || $this->catalog->has($key, $fallback)
+            ));
     }
 
     public function getLocale(): string
