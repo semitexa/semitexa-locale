@@ -61,6 +61,11 @@ final class LocaleBootstrapperPackTest extends TestCase
         // Request asks for 'de' (in the tenant's set) → resolves 'de'.
         $bootstrapper->resolve($this->makeRequest('/', ['Accept-Language' => 'de']));
         self::assertSame('de', $manager->getLocale());
+
+        // resolve() publishes the tenant's EFFECTIVE supported set into the
+        // context store — the per-request source for the language-switcher UI,
+        // sitemap alternates and locale_switch_url prefix stripping.
+        self::assertSame(['fr', 'de'], LocaleContextStore::getSupportedLocales());
     }
 
     #[Test]

@@ -19,15 +19,18 @@ use Swoole\Coroutine;
  */
 final class LocaleContextStore
 {
-    private const LOCALE_KEY         = '__locale';
-    private const FALLBACK_KEY       = '__locale_fallback';
-    private const URL_PREFIX_KEY     = '__locale_url_prefix';
-    private const DEFAULT_LOCALE_KEY = '__locale_default';
+    private const LOCALE_KEY            = '__locale';
+    private const FALLBACK_KEY          = '__locale_fallback';
+    private const URL_PREFIX_KEY        = '__locale_url_prefix';
+    private const DEFAULT_LOCALE_KEY    = '__locale_default';
+    private const SUPPORTED_LOCALES_KEY = '__locale_supported';
 
     private static string $staticLocale         = 'en';
     private static string $staticFallbackLocale = 'en';
     private static bool $staticUrlPrefix        = false;
     private static string $staticDefaultLocale  = 'en';
+    /** @var string[] Empty = not set (callers fall back to their own config). */
+    private static array $staticSupportedLocales = [];
 
     public static function setLocale(string $locale): void
     {
@@ -106,14 +109,43 @@ final class LocaleContextStore
     }
 
     /**
+     * The EFFECTIVE (per-tenant) supported-locale set for this request.
+     * Set by locale resolution from the effective pack; an empty array means
+     * "not set" — callers fall back to their own (global) config, so a cron /
+     * pre-resolution context never sees a wrong tenant's set.
+     *
+     * @param string[] $locales
+     */
+    public static function setSupportedLocales(array $locales): void
+    {
+        if (self::inCoroutine()) {
+            Coroutine::getContext()[self::SUPPORTED_LOCALES_KEY] = $locales;
+            return;
+        }
+
+        self::$staticSupportedLocales = $locales;
+    }
+
+    /** @return string[] Empty = not set for this request. */
+    public static function getSupportedLocales(): array
+    {
+        if (self::inCoroutine()) {
+            return Coroutine::getContext()[self::SUPPORTED_LOCALES_KEY] ?? self::$staticSupportedLocales;
+        }
+
+        return self::$staticSupportedLocales;
+    }
+
+    /**
      * Reset static fallback state (useful in CLI/test teardown).
      */
     public static function clearFallback(): void
     {
-        self::$staticLocale         = 'en';
-        self::$staticFallbackLocale = 'en';
-        self::$staticUrlPrefix      = false;
-        self::$staticDefaultLocale  = 'en';
+        self::$staticLocale            = 'en';
+        self::$staticFallbackLocale    = 'en';
+        self::$staticUrlPrefix         = false;
+        self::$staticDefaultLocale     = 'en';
+        self::$staticSupportedLocales  = [];
     }
 
     private static function inCoroutine(): bool

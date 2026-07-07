@@ -40,8 +40,10 @@ final class LocaleBootstrapper
     /**
      * The pack in effect for the CURRENT tenant: the base config with the
      * tenant's overrides overlaid, or the base when no provider is bound.
+     * Public so the lifecycle phase (redirect logic, context-store values)
+     * operates on the SAME pack resolution validated against.
      */
-    private function effectiveConfig(): LocaleConfig
+    public function getEffectiveConfig(): LocaleConfig
     {
         return $this->packProvider?->resolvedPack($this->config) ?? $this->config;
     }
@@ -64,7 +66,7 @@ final class LocaleBootstrapper
     public function resolve(Request $request, ?CookieJarInterface $cookieJar = null): ?LocaleResolution
     {
         // Resolve under the CURRENT tenant's pack (base when no provider).
-        $config = $this->effectiveConfig();
+        $config = $this->getEffectiveConfig();
 
         if (!$config->enabled) {
             return null;
@@ -72,6 +74,7 @@ final class LocaleBootstrapper
 
         $this->localeContext->setLocale($config->defaultLocale);
         $this->localeContext->setFallbackLocale($config->fallbackLocale);
+        \Semitexa\Locale\Context\LocaleContextStore::setSupportedLocales($config->supportedLocales);
 
         $resolution = null;
 
