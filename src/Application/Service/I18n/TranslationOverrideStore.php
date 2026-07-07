@@ -91,24 +91,28 @@ final class TranslationOverrideStore implements TranslationOverrideProviderInter
         if ($existing === null) {
             try {
                 $this->scoped()->insert($row);
-            } catch (\Throwable) {
-                // Lost a concurrent first-write race on the unique
+            } catch (\Throwable $e) {
+                // Possibly a lost concurrent first-write race on the unique
                 // (tenant, locale, message_key) index — the row exists now;
                 // re-fetch its id and update instead of failing.
                 $winner = $this->scoped()->query()
                     ->where(TranslationOverrideResource::column('locale'), Operator::Equals, $locale)
                     ->where(TranslationOverrideResource::column('message_key'), Operator::Equals, $key)
                     ->fetchOneAs(TranslationOverrideResource::class, $this->orm()->getMapperRegistry());
-                if ($winner !== null) {
-                    $this->scoped()->update(new TranslationOverrideResource(
-                        id: $winner->id,
-                        tenant_id: $tenant,
-                        locale: $locale,
-                        message_key: $key,
-                        value: $value,
-                        updated_at: new \DateTimeImmutable(),
-                    ));
+                if ($winner === null) {
+                    // No winner ⇒ this was NOT the duplicate-key race and
+                    // nothing was persisted. Surface the real failure — an
+                    // admin write must never report success on a lost write.
+                    throw $e;
                 }
+                $this->scoped()->update(new TranslationOverrideResource(
+                    id: $winner->id,
+                    tenant_id: $tenant,
+                    locale: $locale,
+                    message_key: $key,
+                    value: $value,
+                    updated_at: new \DateTimeImmutable(),
+                ));
             }
         } else {
             $this->scoped()->update($row);

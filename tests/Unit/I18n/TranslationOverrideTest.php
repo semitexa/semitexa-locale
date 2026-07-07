@@ -114,6 +114,41 @@ final class TranslationOverrideTest extends TestCase
         $store->remove('en', 'welcome');
         self::assertNull($store->override('welcome', 'en'));
     }
+
+    #[Test]
+    public function a_non_duplicate_insert_failure_is_rethrown_not_swallowed(): void
+    {
+        // set()'s catch exists ONLY for the duplicate-key first-write race
+        // (insert lost → a winner row exists → update it). Any other insert
+        // failure leaves nothing persisted, so it must surface — not return
+        // as a silent success that drops the admin's write.
+        $orm = new OrmManager(config: new ConnectionConfig(driver: 'sqlite', sqliteMemory: true));
+        $orm->getAdapter()->execute(
+            'CREATE TABLE locale_translation_override (
+                id TEXT PRIMARY KEY, tenant_id TEXT, locale TEXT NOT NULL,
+                message_key TEXT NOT NULL, value TEXT NOT NULL, updated_at TEXT NOT NULL
+            )',
+        );
+        // Simulate a storage-level failure: SELECTs work, every INSERT aborts
+        // with a NON-duplicate error.
+        $orm->getAdapter()->execute(
+            'CREATE TRIGGER fail_override_insert BEFORE INSERT ON locale_translation_override
+             BEGIN SELECT RAISE(ABORT, \'simulated storage failure\'); END',
+        );
+
+        $ctx = new OverrideTenantContextStore();
+        $ctx->switchTo('acme');
+        $store = (new TranslationOverrideStore())->withOrmManager($orm)->withTenantContextStore($ctx);
+
+        try {
+            $store->set('en', 'welcome', 'Acme Welcome');
+            self::fail('A non-duplicate insert failure must be rethrown by set().');
+        } catch (\Throwable $e) {
+            self::assertStringContainsString('simulated storage failure', $e->getMessage());
+        }
+
+        self::assertNull($store->override('welcome', 'en'), 'Nothing may be reported as persisted.');
+    }
 }
 
 final class StubOverrideProvider implements TranslationOverrideProviderInterface
