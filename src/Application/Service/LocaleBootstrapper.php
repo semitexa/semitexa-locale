@@ -15,6 +15,7 @@ use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Locale\Domain\Event\LocaleResolved;
 use Semitexa\Locale\Application\Service\Resolver\CookieLocaleResolver;
 use Semitexa\Locale\Domain\Contract\LocaleResolverInterface;
+use Semitexa\Locale\Domain\Contract\LocalePackProviderInterface;
 use Semitexa\Locale\Application\Service\Resolver\PathLocaleResolver;
 use Semitexa\Locale\Application\Service\Resolver\HeaderLocaleResolver;
 
@@ -26,8 +27,23 @@ final class LocaleBootstrapper
         private readonly LocaleContextInterface $localeContext,
         ?LocaleConfig $config = null,
         private readonly ?EventDispatcherInterface $events = null,
+        /**
+         * Per-tenant pack overlay (null = the global pack for everyone).
+         * Applied per request in {@see resolve()} so each tenant's default /
+         * fallback / supported-set drives its own locale resolution.
+         */
+        private readonly ?LocalePackProviderInterface $packProvider = null,
     ) {
         $this->config = $config ?? LocaleConfig::fromEnvironment();
+    }
+
+    /**
+     * The pack in effect for the CURRENT tenant: the base config with the
+     * tenant's overrides overlaid, or the base when no provider is bound.
+     */
+    private function effectiveConfig(): LocaleConfig
+    {
+        return $this->packProvider?->resolvedPack($this->config) ?? $this->config;
     }
 
     public function isEnabled(): bool
@@ -47,24 +63,27 @@ final class LocaleBootstrapper
 
     public function resolve(Request $request, ?CookieJarInterface $cookieJar = null): ?LocaleResolution
     {
-        if (!$this->config->enabled) {
+        // Resolve under the CURRENT tenant's pack (base when no provider).
+        $config = $this->effectiveConfig();
+
+        if (!$config->enabled) {
             return null;
         }
 
-        $this->localeContext->setLocale($this->config->defaultLocale);
-        $this->localeContext->setFallbackLocale($this->config->fallbackLocale);
+        $this->localeContext->setLocale($config->defaultLocale);
+        $this->localeContext->setFallbackLocale($config->fallbackLocale);
 
         $resolution = null;
 
-        foreach ($this->config->resolverPriority as $key) {
-            $resolver = $this->createResolver($key, $cookieJar);
+        foreach ($config->resolverPriority as $key) {
+            $resolver = $this->createResolver($key, $config->supportedLocales, $cookieJar);
 
             if ($resolver === null) {
                 continue;
             }
 
             if ($key === 'path'
-                && $this->config->urlPrefixEnabled
+                && $config->urlPrefixEnabled
                 && $resolver instanceof PathLocaleResolver
             ) {
                 $detection = $resolver->detect($request);
@@ -74,7 +93,7 @@ final class LocaleBootstrapper
                 }
                 // No prefix in URL → default locale is authoritative; skip cookie/header
                 $resolution = new LocaleResolution(
-                    locale: $this->config->defaultLocale,
+                    locale: $config->defaultLocale,
                     resolvedBy: 'path',
                     hadPathPrefix: false,
                     strippedPath: null,
@@ -106,13 +125,16 @@ final class LocaleBootstrapper
         return $resolution;
     }
 
-    private function createResolver(string $key, ?CookieJarInterface $cookieJar = null): ?LocaleResolverInterface
+    /**
+     * @param string[] $supportedLocales the EFFECTIVE (tenant) supported set
+     */
+    private function createResolver(string $key, array $supportedLocales, ?CookieJarInterface $cookieJar = null): ?LocaleResolverInterface
     {
         return match ($key) {
-            'path' => new PathLocaleResolver($this->config->supportedLocales),
-            'header' => new HeaderLocaleResolver($this->config->supportedLocales),
+            'path' => new PathLocaleResolver($supportedLocales),
+            'header' => new HeaderLocaleResolver($supportedLocales),
             'cookie' => $cookieJar !== null
-                ? new CookieLocaleResolver($cookieJar, $this->config->supportedLocales)
+                ? new CookieLocaleResolver($cookieJar, $supportedLocales)
                 : null,
             default => null,
         };
