@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Application\Db\MySQL\Mapper;
 
+use Semitexa\Locale\Application\Db\MySQL\Model\TranslationOverrideResource;
+use Semitexa\Locale\Domain\Model\TranslationOverride;
 use Semitexa\Orm\Attribute\AsMapper;
 use Semitexa\Orm\Domain\Contract\ResourceModelMapperInterface;
-use Semitexa\Locale\Application\Db\MySQL\Model\TranslationOverrideResource;
 
-/**
- * Self-mapping mapper for {@see TranslationOverrideResource} — resource is the
- * domain model, both directions are clone-passthroughs.
- */
-#[AsMapper(
-    resourceModel: TranslationOverrideResource::class,
-    domainModel: TranslationOverrideResource::class,
-)]
+/** The bridge between the MySQL row and the override the translator consults. */
+#[AsMapper(resourceModel: TranslationOverrideResource::class, domainModel: TranslationOverride::class)]
 final class TranslationOverrideMapper implements ResourceModelMapperInterface
 {
     public function toDomain(object $resourceModel): object
@@ -23,14 +18,27 @@ final class TranslationOverrideMapper implements ResourceModelMapperInterface
         $resourceModel instanceof TranslationOverrideResource
             || throw new \InvalidArgumentException('Unexpected resource model.');
 
-        return clone $resourceModel;
+        return new TranslationOverride(
+            id: $resourceModel->id,
+            tenantId: $resourceModel->tenant_id,
+            locale: $resourceModel->locale,
+            messageKey: $resourceModel->message_key,
+            value: $resourceModel->value,
+            updatedAt: $resourceModel->updated_at,
+        );
     }
 
     public function toSourceModel(object $domainModel): object
     {
-        $domainModel instanceof TranslationOverrideResource
-            || throw new \InvalidArgumentException('Unexpected domain model.');
+        $domainModel instanceof TranslationOverride || throw new \InvalidArgumentException('Unexpected domain model.');
 
-        return clone $domainModel;
+        return new TranslationOverrideResource(
+            id: $domainModel->getId(),
+            tenant_id: $domainModel->getTenantId(),
+            locale: $domainModel->getLocale(),
+            message_key: $domainModel->getMessageKey(),
+            value: $domainModel->getValue(),
+            updated_at: $domainModel->getUpdatedAt() ?? new \DateTimeImmutable(),
+        );
     }
 }
