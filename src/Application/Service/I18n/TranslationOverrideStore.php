@@ -15,6 +15,7 @@ use Semitexa\Locale\Application\Db\MySQL\Model\TranslationOverrideResource;
 use Semitexa\Locale\Domain\Model\TranslationOverride;
 use Semitexa\Locale\Domain\Contract\TranslationOverrideProviderInterface;
 use Semitexa\Orm\Application\Service\Uuid7;
+use Semitexa\Orm\Application\Service\OrmBackedStore;
 use Semitexa\Orm\OrmManager;
 use Semitexa\Orm\Query\Operator;
 use Semitexa\Orm\Repository\DomainRepository;
@@ -33,6 +34,8 @@ use Semitexa\Orm\Repository\DomainRepository;
 #[SatisfiesServiceContract(of: TranslationOverrideProviderInterface::class)]
 final class TranslationOverrideStore implements TranslationOverrideProviderInterface
 {
+    use OrmBackedStore;
+
     private const MEMO_KEY = 'locale.override.memo';
 
     #[InjectAsReadonly]
@@ -41,19 +44,8 @@ final class TranslationOverrideStore implements TranslationOverrideProviderInter
     #[InjectAsReadonly]
     protected TenantContextStoreInterface $tenantContextStore;
 
-    private ?DomainRepository $repository = null;
-
     /** @var array<string, true> memoKeys already logged as failed this worker (avoid per-request log spam). */
     private static array $loggedFailures = [];
-
-    /** Test seam — production path uses property injection. */
-    public function withOrmManager(OrmManager $orm): self
-    {
-        $this->orm = $orm;
-        $this->repository = null;
-
-        return $this;
-    }
 
     /** Test seam — production path uses property injection. */
     public function withTenantContextStore(TenantContextStoreInterface $store): self
@@ -78,7 +70,7 @@ final class TranslationOverrideStore implements TranslationOverrideProviderInter
         $existing = $this->scoped()->query()
             ->where(TranslationOverrideResource::column('locale'), Operator::Equals, $locale)
             ->where(TranslationOverrideResource::column('message_key'), Operator::Equals, $key)
-            ->fetchOneAs(TranslationOverride::class, $this->orm()->getMapperRegistry());
+            ->fetchOneAs(TranslationOverride::class, $this->mapperRegistry());
 
         $row = new TranslationOverride(
             id: $existing?->getId() ?? Uuid7::generate(),
@@ -99,7 +91,7 @@ final class TranslationOverrideStore implements TranslationOverrideProviderInter
                 $winner = $this->scoped()->query()
                     ->where(TranslationOverrideResource::column('locale'), Operator::Equals, $locale)
                     ->where(TranslationOverrideResource::column('message_key'), Operator::Equals, $key)
-                    ->fetchOneAs(TranslationOverride::class, $this->orm()->getMapperRegistry());
+                    ->fetchOneAs(TranslationOverride::class, $this->mapperRegistry());
                 if ($winner === null) {
                     // No winner ⇒ this was NOT the duplicate-key race and
                     // nothing was persisted. Surface the real failure — an
@@ -129,7 +121,7 @@ final class TranslationOverrideStore implements TranslationOverrideProviderInter
         $existing = $this->scoped()->query()
             ->where(TranslationOverrideResource::column('locale'), Operator::Equals, $locale)
             ->where(TranslationOverrideResource::column('message_key'), Operator::Equals, $key)
-            ->fetchOneAs(TranslationOverride::class, $this->orm()->getMapperRegistry());
+            ->fetchOneAs(TranslationOverride::class, $this->mapperRegistry());
 
         if ($existing !== null) {
             $this->scoped()->delete($existing);
@@ -159,7 +151,7 @@ final class TranslationOverrideStore implements TranslationOverrideProviderInter
             /** @var list<TranslationOverride> $rows */
             $rows = $this->scoped()->query()
                 ->where(TranslationOverrideResource::column('locale'), Operator::Equals, $locale)
-                ->fetchAllAs(TranslationOverride::class, $this->orm()->getMapperRegistry());
+                ->fetchAllAs(TranslationOverride::class, $this->mapperRegistry());
             foreach ($rows as $row) {
                 $map[$row->getMessageKey()] = $row->getValue();
             }
@@ -209,18 +201,6 @@ final class TranslationOverrideStore implements TranslationOverrideProviderInter
 
     private function repository(): DomainRepository
     {
-        return $this->repository ??= $this->orm()->repository(
-            TranslationOverrideResource::class,
-            TranslationOverride::class,
-        );
-    }
-
-    private function orm(): OrmManager
-    {
-        if (!isset($this->orm)) {
-            $this->orm = new OrmManager();
-        }
-
-        return $this->orm;
+        return $this->domainRepository(TranslationOverrideResource::class, TranslationOverride::class);
     }
 }
