@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Tests\Unit\Context;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Semitexa\Locale\Context\LocaleContextStore;
 
 final class LocaleContextStoreTest extends TestCase
@@ -53,5 +56,23 @@ final class LocaleContextStoreTest extends TestCase
 
         $this->assertSame('en', LocaleContextStore::getLocale());
         $this->assertSame('en', LocaleContextStore::getFallbackLocale());
+    }
+
+    #[Test]
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function the_end_of_a_unit_of_work_resets_the_fallback_for_the_next_one(): void
+    {
+        // The queue worker runs jobs outside a coroutine and calls resetAll()
+        // after each: a locale one tenant's job set must not reach the next.
+        // Separate process: registering the resetter and calling resetAll()
+        // are process-wide, so neither may leak into (or depend on) other tests.
+        LocaleContextStore::setLocale('fr-FR');
+        LocaleContextStore::setSupportedLocales(['fr-FR', 'en']);
+
+        PerRequestStateRegistry::resetAll();
+
+        $this->assertSame('en', LocaleContextStore::getLocale());
+        $this->assertSame([], LocaleContextStore::getSupportedLocales());
     }
 }

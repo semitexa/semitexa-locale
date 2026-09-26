@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Context;
 
+use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Swoole\Coroutine;
 
 /**
@@ -15,7 +16,10 @@ use Swoole\Coroutine;
  * coroutine finishes, so locale changes in one request never
  * bleed into concurrent requests.
  *
- * Outside of a coroutine (CLI, tests) a plain static fallback is used.
+ * Outside of a coroutine (CLI, tests) a plain static fallback is used. The
+ * queue worker runs each job there, so the fallback is reset through
+ * {@see PerRequestStateRegistry} after every unit of work — otherwise one
+ * tenant's job leaves its locale for the next job on the worker.
  */
 final class LocaleContextStore
 {
@@ -32,6 +36,8 @@ final class LocaleContextStore
     /** @var string[] Empty = not set (callers fall back to their own config). */
     private static array $staticSupportedLocales = [];
 
+    private static bool $registered = false;
+
     public static function setLocale(string $locale): void
     {
         if (self::inCoroutine()) {
@@ -39,6 +45,7 @@ final class LocaleContextStore
             return;
         }
 
+        self::ensureRegistered();
         self::$staticLocale = $locale;
     }
 
@@ -58,6 +65,7 @@ final class LocaleContextStore
             return;
         }
 
+        self::ensureRegistered();
         self::$staticFallbackLocale = $locale;
     }
 
@@ -77,6 +85,7 @@ final class LocaleContextStore
             return;
         }
 
+        self::ensureRegistered();
         self::$staticUrlPrefix = $enabled;
     }
 
@@ -96,6 +105,7 @@ final class LocaleContextStore
             return;
         }
 
+        self::ensureRegistered();
         self::$staticDefaultLocale = $locale;
     }
 
@@ -123,6 +133,7 @@ final class LocaleContextStore
             return;
         }
 
+        self::ensureRegistered();
         self::$staticSupportedLocales = $locales;
     }
 
@@ -146,6 +157,19 @@ final class LocaleContextStore
         self::$staticUrlPrefix         = false;
         self::$staticDefaultLocale     = 'en';
         self::$staticSupportedLocales  = [];
+    }
+
+    /** Lazy, so a worker that never sets a locale registers nothing. */
+    private static function ensureRegistered(): void
+    {
+        if (self::$registered) {
+            return;
+        }
+
+        PerRequestStateRegistry::register('locale_context_store', static function (): void {
+            self::clearFallback();
+        });
+        self::$registered = true;
     }
 
     private static function inCoroutine(): bool
