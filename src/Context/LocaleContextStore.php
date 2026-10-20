@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Context;
 
+use Semitexa\Core\Lifecycle\CarriedContext;
 use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Swoole\Coroutine;
 
@@ -41,6 +42,7 @@ final class LocaleContextStore
     public static function setLocale(string $locale): void
     {
         if (self::inCoroutine()) {
+            self::ensureCarried();
             Coroutine::getContext()[self::LOCALE_KEY] = $locale;
             return;
         }
@@ -61,6 +63,7 @@ final class LocaleContextStore
     public static function setFallbackLocale(string $locale): void
     {
         if (self::inCoroutine()) {
+            self::ensureCarried();
             Coroutine::getContext()[self::FALLBACK_KEY] = $locale;
             return;
         }
@@ -81,6 +84,7 @@ final class LocaleContextStore
     public static function setUrlPrefixEnabled(bool $enabled): void
     {
         if (self::inCoroutine()) {
+            self::ensureCarried();
             Coroutine::getContext()[self::URL_PREFIX_KEY] = $enabled;
             return;
         }
@@ -101,6 +105,7 @@ final class LocaleContextStore
     public static function setDefaultLocale(string $locale): void
     {
         if (self::inCoroutine()) {
+            self::ensureCarried();
             Coroutine::getContext()[self::DEFAULT_LOCALE_KEY] = $locale;
             return;
         }
@@ -129,6 +134,7 @@ final class LocaleContextStore
     public static function setSupportedLocales(array $locales): void
     {
         if (self::inCoroutine()) {
+            self::ensureCarried();
             Coroutine::getContext()[self::SUPPORTED_LOCALES_KEY] = $locales;
             return;
         }
@@ -170,6 +176,12 @@ final class LocaleContextStore
             self::clearFallback();
         });
         self::$registered = true;
+    }
+
+    /** Work run after the response (an Async handler) renders in the request's locale. */
+    private static function ensureCarried(): void
+    {
+        CarriedContext::carry(self::LOCALE_KEY, self::FALLBACK_KEY, self::URL_PREFIX_KEY, self::DEFAULT_LOCALE_KEY, self::SUPPORTED_LOCALES_KEY);
     }
 
     private static function inCoroutine(): bool
