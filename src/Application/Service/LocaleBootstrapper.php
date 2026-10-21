@@ -73,7 +73,8 @@ final class LocaleBootstrapper
         }
 
         $this->localeContext->setLocale($config->defaultLocale);
-        $this->localeContext->setFallbackLocale($config->fallbackLocale);
+        // On the store, not the context: the core contract has no setter for it.
+        \Semitexa\Locale\Context\LocaleContextStore::setFallbackLocale($config->fallbackLocale);
         \Semitexa\Locale\Context\LocaleContextStore::setSupportedLocales($config->supportedLocales);
 
         $resolution = null;

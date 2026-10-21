@@ -104,4 +104,29 @@ final class HeaderLocaleResolverTest extends TestCase
             cookies: [],
         );
     }
+
+    #[Test]
+    public function a_language_with_q_zero_is_never_chosen(): void
+    {
+        // q=0 means "not this one"; it was sorted last and still chosen.
+        $resolver = new HeaderLocaleResolver(['en', 'uk']);
+
+        $this->assertNull($resolver->resolve(new \Semitexa\Core\Request('GET', '/', ['Accept-Language' => 'uk;q=0'], [], [], [], [])));
+    }
+
+    #[Test]
+    public function a_zero_weight_language_is_passed_over_for_the_next(): void
+    {
+        $resolver = new HeaderLocaleResolver(['en', 'uk']);
+
+        $this->assertSame('en', $resolver->resolve($this->makeRequest(['Accept-Language' => 'uk;q=0, en;q=0.1'])));
+    }
+
+    #[Test]
+    public function a_weight_that_is_not_a_number_counts_as_one(): void
+    {
+        $resolver = new HeaderLocaleResolver(['en', 'uk']);
+
+        $this->assertSame('uk', $resolver->resolve($this->makeRequest(['Accept-Language' => 'en;q=0.5, uk;q=x'])));
+    }
 }

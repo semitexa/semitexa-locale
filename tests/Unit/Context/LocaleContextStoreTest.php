@@ -13,8 +13,25 @@ use Semitexa\Locale\Context\LocaleContextStore;
 
 final class LocaleContextStoreTest extends TestCase
 {
+    /** @var array<string, string|false> */
+    private array $environment = [];
+
+    protected function setUp(): void
+    {
+        // Without a request the store answers the configured locales, so the
+        // tests that expect 'en' pin it instead of trusting the environment.
+        foreach (['LOCALE_DEFAULT', 'LOCALE_FALLBACK'] as $key) {
+            $this->environment[$key] = getenv($key);
+            putenv($key . '=en');
+        }
+        LocaleContextStore::clearFallback();
+    }
+
     protected function tearDown(): void
     {
+        foreach ($this->environment as $key => $value) {
+            $value === false ? putenv($key) : putenv($key . '=' . $value);
+        }
         LocaleContextStore::clearFallback();
     }
 
@@ -74,5 +91,18 @@ final class LocaleContextStoreTest extends TestCase
 
         $this->assertSame('en', LocaleContextStore::getLocale());
         $this->assertSame([], LocaleContextStore::getSupportedLocales());
+    }
+
+    #[Test]
+    public function without_a_request_the_locale_is_the_configured_default(): void
+    {
+        // CLI and queue jobs got 'en' whatever LOCALE_DEFAULT said.
+        putenv('LOCALE_DEFAULT=uk');
+        putenv('LOCALE_FALLBACK=de');
+        LocaleContextStore::clearFallback();
+
+        $this->assertSame('uk', LocaleContextStore::getLocale());
+        $this->assertSame('uk', LocaleContextStore::getDefaultLocale());
+        $this->assertSame('de', LocaleContextStore::getFallbackLocale());
     }
 }

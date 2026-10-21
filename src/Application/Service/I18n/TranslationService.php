@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semitexa\Locale\Application\Service\I18n;
 
 use Semitexa\Core\Locale\LocaleContextInterface;
+use Semitexa\Locale\Context\LocaleContextStore;
 use Semitexa\Locale\Domain\Contract\TranslationOverrideProviderInterface;
 
 final class TranslationService
@@ -18,6 +19,16 @@ final class TranslationService
          */
         private readonly ?TranslationOverrideProviderInterface $overrides = null,
     ) {}
+
+    /**
+     * The fallback lives in the locale store, not on the context: the core
+     * contract has no getFallbackLocale(), and any context other than
+     * LocaleManager (core's DefaultLocaleContext) failed every translation.
+     */
+    private function fallbackLocale(): string
+    {
+        return LocaleContextStore::getFallbackLocale();
+    }
 
     /**
      * A tenant override for ONE locale, or null. Per-locale (not locale|fallback
@@ -34,7 +45,7 @@ final class TranslationService
     public function trans(string $key, array $params = [], ?string $locale = null): string
     {
         $locale ??= $this->localeContext->getLocale();
-        $fallback = $this->localeContext->getFallbackLocale();
+        $fallback = $this->fallbackLocale();
 
         $message = $this->overrideOne($key, $locale)
             ?? $this->catalog->get($key, $locale)
@@ -54,7 +65,7 @@ final class TranslationService
     public function transChoice(string $key, int $count, array $params = [], ?string $locale = null): string
     {
         $locale ??= $this->localeContext->getLocale();
-        $fallback = $this->localeContext->getFallbackLocale();
+        $fallback = $this->fallbackLocale();
 
         $resolvedLocale = $locale;
         $raw = $this->overrideOne($key, $locale) ?? $this->catalog->get($key, $locale);
@@ -79,7 +90,7 @@ final class TranslationService
     public function hasTranslation(string $key, ?string $locale = null): bool
     {
         $locale ??= $this->localeContext->getLocale();
-        $fallback = $this->localeContext->getFallbackLocale();
+        $fallback = $this->fallbackLocale();
 
         return $this->overrideOne($key, $locale) !== null
             || $this->catalog->has($key, $locale)

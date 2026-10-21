@@ -134,4 +134,14 @@ final class TranslationServiceTest extends TestCase
 
         $this->assertSame('de', $this->service->getLocale());
     }
+
+    #[Test]
+    public function any_locale_context_translates_with_the_fallback(): void
+    {
+        // The core contract has no getFallbackLocale(): with core's
+        // DefaultLocaleContext every call was a fatal error.
+        $service = new TranslationService($this->catalog, \Semitexa\Core\Locale\DefaultLocaleContext::getInstance());
+
+        $this->assertSame('Welcome', $service->trans('welcome', locale: 'uk-missing'));
+    }
 }

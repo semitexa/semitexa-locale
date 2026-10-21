@@ -69,9 +69,18 @@ final class HeaderLocaleResolver implements LocaleResolverInterface
             $quality = 1.0;
             foreach (array_slice($segments, 1) as $param) {
                 if (str_starts_with($param, 'q=')) {
-                    $quality = (float) substr($param, 2);
+                    $raw = trim(substr($param, 2));
+                    // A malformed weight keeps the default rather than
+                    // reading as 0 and dropping the language.
+                    $quality = is_numeric($raw) ? (float) $raw : 1.0;
                     break;
                 }
+            }
+
+            // q=0 means "not this one": it used to be sorted last and still
+            // chosen when nothing else matched.
+            if ($quality <= 0.0) {
+                continue;
             }
 
             $entries[] = ['locale' => $locale, 'quality' => $quality];
