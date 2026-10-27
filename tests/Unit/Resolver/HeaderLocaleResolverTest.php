@@ -12,6 +12,16 @@ use Semitexa\Locale\Application\Service\Resolver\HeaderLocaleResolver;
 final class HeaderLocaleResolverTest extends TestCase
 {
     #[Test]
+    public function a_language_given_q_0_is_not_reached_through_a_regional_code(): void
+    {
+        // `en-US, en;q=0` chose en through the primary subtag; `Q=0` was not read.
+        $resolver = new HeaderLocaleResolver(['en', 'de']);
+
+        $this->assertNull($resolver->resolve($this->makeRequest(['Accept-Language' => 'en-US, en;q=0'])));
+        $this->assertSame('de', $resolver->resolve($this->makeRequest(['Accept-Language' => 'en;Q=0, de;q=0.5'])));
+    }
+
+    #[Test]
     public function resolves_single_locale(): void
     {
         $resolver = new HeaderLocaleResolver(['en', 'de']);
