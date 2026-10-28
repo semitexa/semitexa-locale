@@ -30,29 +30,29 @@ final class JsonFileLoader
 
     public function load(TranslationCatalog $catalog): void
     {
-        // Installed packages first — an app module (scanned below) may then
-        // override a package's key for the same locale (addMessages keeps the
-        // first value only for the unprefixed alias; prefixed keys are per-module).
+        // App modules first: addMessages keeps the first value for the
+        // unprefixed alias (prefixed keys are per module), so whoever loads
+        // first wins `key` alone. Packages went first, and a package that
+        // started shipping translations (cms: 85 keys) took over an app's
+        // unprefixed `blocks.align`, though the app is meant to override.
+        if (is_dir($this->modulesRoot)) {
+            foreach (glob($this->modulesRoot . '/*', GLOB_ONLYDIR) ?: [] as $moduleDir) {
+                $localesDir = $this->resolveLocalesDir($moduleDir);
+
+                if ($localesDir === null) {
+                    continue;
+                }
+
+                $this->loadDir($catalog, basename($moduleDir), $localesDir);
+            }
+        }
+
         foreach ($this->extraLocaleDirs as $module => $localesDir) {
-            if (is_string($module) && $module !== '' && is_dir($localesDir)) {
+            // A numeric name comes back from the array as an int key.
+            $module = (string) $module;
+            if ($module !== '' && is_dir($localesDir)) {
                 $this->loadDir($catalog, $module, $localesDir);
             }
-        }
-
-        if (!is_dir($this->modulesRoot)) {
-            return;
-        }
-
-        foreach (glob($this->modulesRoot . '/*', GLOB_ONLYDIR) ?: [] as $moduleDir) {
-            $localesDir = $this->resolveLocalesDir($moduleDir);
-
-            if ($localesDir === null) {
-                continue;
-            }
-
-            $module = basename($moduleDir);
-
-            $this->loadDir($catalog, $module, $localesDir);
         }
     }
 

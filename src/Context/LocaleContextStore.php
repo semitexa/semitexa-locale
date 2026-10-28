@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Locale\Context;
 
+use Semitexa\Core\Environment;
 use Semitexa\Core\Lifecycle\CarriedContext;
 use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Swoole\Coroutine;
@@ -30,10 +31,13 @@ final class LocaleContextStore
     private const DEFAULT_LOCALE_KEY    = '__locale_default';
     private const SUPPORTED_LOCALES_KEY = '__locale_supported';
 
-    private static string $staticLocale         = 'en';
-    private static string $staticFallbackLocale = 'en';
+    // Unset until something sets them: a CLI process or a queue job then
+    // reads LOCALE_DEFAULT / LOCALE_FALLBACK. They were 'en' outright, so a
+    // queued mail on an install with LOCALE_DEFAULT=uk went out in English.
+    private static ?string $staticLocale         = null;
+    private static ?string $staticFallbackLocale = null;
     private static bool $staticUrlPrefix        = false;
-    private static string $staticDefaultLocale  = 'en';
+    private static ?string $staticDefaultLocale  = null;
     /** @var string[] Empty = not set (callers fall back to their own config). */
     private static array $staticSupportedLocales = [];
 
@@ -54,10 +58,10 @@ final class LocaleContextStore
     public static function getLocale(): string
     {
         if (self::inCoroutine()) {
-            return Coroutine::getContext()[self::LOCALE_KEY] ?? self::$staticLocale;
+            return Coroutine::getContext()[self::LOCALE_KEY] ?? self::$staticLocale ?? self::configured('LOCALE_DEFAULT');
         }
 
-        return self::$staticLocale;
+        return self::$staticLocale ?? self::configured('LOCALE_DEFAULT');
     }
 
     public static function setFallbackLocale(string $locale): void
@@ -75,10 +79,10 @@ final class LocaleContextStore
     public static function getFallbackLocale(): string
     {
         if (self::inCoroutine()) {
-            return Coroutine::getContext()[self::FALLBACK_KEY] ?? self::$staticFallbackLocale;
+            return Coroutine::getContext()[self::FALLBACK_KEY] ?? self::$staticFallbackLocale ?? self::configured('LOCALE_FALLBACK');
         }
 
-        return self::$staticFallbackLocale;
+        return self::$staticFallbackLocale ?? self::configured('LOCALE_FALLBACK');
     }
 
     public static function setUrlPrefixEnabled(bool $enabled): void
@@ -117,10 +121,10 @@ final class LocaleContextStore
     public static function getDefaultLocale(): string
     {
         if (self::inCoroutine()) {
-            return Coroutine::getContext()[self::DEFAULT_LOCALE_KEY] ?? self::$staticDefaultLocale;
+            return Coroutine::getContext()[self::DEFAULT_LOCALE_KEY] ?? self::$staticDefaultLocale ?? self::configured('LOCALE_DEFAULT');
         }
 
-        return self::$staticDefaultLocale;
+        return self::$staticDefaultLocale ?? self::configured('LOCALE_DEFAULT');
     }
 
     /**
@@ -158,11 +162,18 @@ final class LocaleContextStore
      */
     public static function clearFallback(): void
     {
-        self::$staticLocale            = 'en';
-        self::$staticFallbackLocale    = 'en';
+        self::$staticLocale            = null;
+        self::$staticFallbackLocale    = null;
         self::$staticUrlPrefix         = false;
-        self::$staticDefaultLocale     = 'en';
+        self::$staticDefaultLocale     = null;
         self::$staticSupportedLocales  = [];
+    }
+
+    private static function configured(string $key): string
+    {
+        $value = trim((string) Environment::getEnvValue($key, 'en'));
+
+        return $value !== '' ? $value : 'en';
     }
 
     /** Lazy, so a worker that never sets a locale registers nothing. */

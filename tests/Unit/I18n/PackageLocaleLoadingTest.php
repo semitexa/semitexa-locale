@@ -38,4 +38,26 @@ final class PackageLocaleLoadingTest extends TestCase
         unlink($dir . '/uk.json');
         rmdir($dir);
     }
+
+    /**
+     * The unprefixed alias keeps the first value loaded, and packages loaded
+     * first: a package that began shipping a key took it over from the app.
+     */
+    #[Test]
+    public function an_app_module_wins_an_unprefixed_key_a_package_also_ships(): void
+    {
+        $root = sys_get_temp_dir() . '/sx-locale-test-' . bin2hex(random_bytes(4));
+        mkdir($root . '/modules/Shop/Application/View/locales', 0777, true);
+        mkdir($root . '/cms', 0777, true);
+        file_put_contents($root . '/modules/Shop/Application/View/locales/en.json', json_encode(['blocks.align' => 'Shop alignment']));
+        file_put_contents($root . '/cms/en.json', json_encode(['blocks.align' => 'Align']));
+
+        $catalog = new TranslationCatalog();
+        (new JsonFileLoader($root . '/modules', ['cms' => $root . '/cms']))->load($catalog);
+
+        self::assertSame('Shop alignment', $catalog->get('blocks.align', 'en'));
+        self::assertSame('Align', $catalog->get('cms.blocks.align', 'en'), 'the package keeps its prefixed key');
+
+        exec('rm -rf ' . escapeshellarg($root));
+    }
 }

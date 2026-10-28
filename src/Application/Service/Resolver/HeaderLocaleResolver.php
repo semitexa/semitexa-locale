@@ -24,7 +24,8 @@ final class HeaderLocaleResolver implements LocaleResolverInterface
             return null;
         }
 
-        $entries = $this->parseAcceptLanguage($header);
+        $refused = [];
+        $entries = $this->parseAcceptLanguage($header, $refused);
 
         foreach ($entries as $locale) {
             if ($this->supportedLocales === []) {
@@ -40,7 +41,8 @@ final class HeaderLocaleResolver implements LocaleResolverInterface
             if ($separatorPosition !== false) {
                 $primarySubtag = substr($locale, 0, $separatorPosition);
 
-                if (in_array($primarySubtag, $this->supportedLocales, true)) {
+                // Not one the header refused: `en-US, en;q=0` chose en.
+                if (in_array($primarySubtag, $this->supportedLocales, true) && !isset($refused[$primarySubtag])) {
                     return $primarySubtag;
                 }
             }
@@ -52,9 +54,10 @@ final class HeaderLocaleResolver implements LocaleResolverInterface
     /**
      * Parse Accept-Language header into locale codes sorted by quality factor descending.
      *
+     * @param array<string, true> $refused out: the languages given q=0
      * @return string[]
      */
-    private function parseAcceptLanguage(string $header): array
+    private function parseAcceptLanguage(string $header, array &$refused): array
     {
         $entries = [];
 
@@ -68,10 +71,21 @@ final class HeaderLocaleResolver implements LocaleResolverInterface
 
             $quality = 1.0;
             foreach (array_slice($segments, 1) as $param) {
-                if (str_starts_with($param, 'q=')) {
-                    $quality = (float) substr($param, 2);
+                // `Q=0` is the same weight: the name is case-insensitive.
+                if (str_starts_with(strtolower($param), 'q=')) {
+                    $raw = trim(substr($param, 2));
+                    // A malformed weight keeps the default rather than
+                    // reading as 0 and dropping the language.
+                    $quality = is_numeric($raw) ? (float) $raw : 1.0;
                     break;
                 }
+            }
+
+            // q=0 means "not this one": it used to be sorted last and still
+            // chosen when nothing else matched.
+            if ($quality <= 0.0) {
+                $refused[$locale] = true;
+                continue;
             }
 
             $entries[] = ['locale' => $locale, 'quality' => $quality];
